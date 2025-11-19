@@ -185,7 +185,7 @@ method: 'POST'
 						<li>Enable Organizations and select "Require organization"</li>
 						<li>Choose the specific organization this app should serve</li>
 						<li>Update <code>.env</code> with the new app's credentials</li>
-<li>Add callback URL to the Auth0 app: <code>http://localhost:3001/api/auth/callback\</code\>\</li\>
+						<li>Add callback URL to the Auth0 app: <code>http://localhost:3001/api/auth/callback</code></li>
 </ol>
 </div>
 </div>
