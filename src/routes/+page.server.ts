@@ -16,8 +16,22 @@ export const load: ServerLoad = async (event) => {
 	}
 
 	// If no session and no error, redirect to login
+	// Pass along invitation and organization parameters if present
 	if (!session || !session.user) {
-		throw redirect(303, '/api/auth/login');
+		const invitation = event.url.searchParams.get('invitation');
+		const organization = event.url.searchParams.get('organization');
+		const organizationName = event.url.searchParams.get('organization_name');
+		
+		const loginParams = new URLSearchParams();
+		if (invitation) loginParams.set('invitation', invitation);
+		if (organization) loginParams.set('organization', organization);
+		if (organizationName) loginParams.set('organization_name', organizationName);
+		
+		const loginUrl = loginParams.toString() 
+			? `/api/auth/login?${loginParams.toString()}`
+			: '/api/auth/login';
+			
+		throw redirect(303, loginUrl);
 	}
 
 	return {
