@@ -21,6 +21,49 @@ method: 'POST'
 			window.location.href = '/';
 		}
 	}
+
+	function getErrorMessage(error: string) {
+		const messages: Record<string, { title: string; message: string; action: string }> = {
+			'access_denied': {
+				title: 'Access Denied',
+				message: 'You are not a member of the organization required to access this application.',
+				action: 'Contact your administrator to request access to this organization.'
+			},
+			'unauthorized_organization': {
+				title: 'Wrong Organization',
+				message: 'Your account belongs to a different organization than required for this application.',
+				action: 'This app is restricted to a specific organization. Please use the correct account.'
+			},
+			'invalid_state': {
+				title: 'Security Validation Failed',
+				message: 'The authentication state could not be verified.',
+				action: 'Please try logging in again. If the problem persists, clear your browser cookies.'
+			},
+			'token_exchange_failed': {
+				title: 'Authentication Failed',
+				message: 'Could not complete the authentication process with Auth0.',
+				action: 'Please try again. If the problem continues, contact support.'
+			},
+			'missing_parameters': {
+				title: 'Missing Information',
+				message: 'Required authentication parameters are missing.',
+				action: 'Please try logging in again.'
+			},
+			'userinfo_failed': {
+				title: 'Profile Error',
+				message: 'Could not retrieve your user profile from Auth0.',
+				action: 'Please try again or contact support.'
+			}
+		};
+
+		return messages[error] || {
+			title: 'Authentication Error',
+			message: `An error occurred during authentication: ${error}`,
+			action: 'Please try logging in again.'
+		};
+	}
+
+	$: errorInfo = data.error ? getErrorMessage(data.error) : null;
 </script>
 
 <svelte:head>
@@ -29,9 +72,35 @@ method: 'POST'
 
 {#if data.error}
 	<div class="error-page">
-		<h1>⚠️ Authentication Error</h1>
-		<p>Error: {data.error}</p>
-		<a href="/api/auth/login">Try Again</a>
+		<div class="error-container">
+			<div class="error-icon">
+				{#if data.error === 'access_denied' || data.error === 'unauthorized_organization'}
+					🚫
+				{:else}
+					⚠️
+				{/if}
+			</div>
+			<h1>{errorInfo?.title}</h1>
+			<p class="error-message">{errorInfo?.message}</p>
+			{#if data.errorDescription}
+				<div class="error-details">
+					<strong>Details:</strong>
+					<p>{data.errorDescription}</p>
+				</div>
+			{/if}
+			<div class="error-action">
+				<p>{errorInfo?.action}</p>
+			</div>
+			<div class="error-buttons">
+				<a href="/api/auth/login" class="btn-primary">Try Again</a>
+				<a href="https://auth0-poc.vercel.app" class="btn-secondary">Return to Console</a>
+			</div>
+			<div class="error-info">
+				<p><strong>Error Code:</strong> <code>{data.error}</code></p>
+				<p><strong>App:</strong> Single-Tenant Internal App</p>
+				<p><strong>Required Organization:</strong> <code>org_v5DsB07TH5m7Icci</code></p>
+			</div>
+		</div>
 	</div>
 {:else if data.user}
 	<div class="app">
@@ -116,7 +185,7 @@ method: 'POST'
 						<li>Enable Organizations and select "Require organization"</li>
 						<li>Choose the specific organization this app should serve</li>
 						<li>Update <code>.env</code> with the new app's credentials</li>
-<li>Add callback URL to the Auth0 app: <code>http://localhost:3001/api/auth/callback</code></li>
+<li>Add callback URL to the Auth0 app: <code>http://localhost:3001/api/auth/callback\</code\>\</li\>
 </ol>
 </div>
 </div>
@@ -135,22 +204,146 @@ background: #f5f7fa;
 .error-page {
 min-height: 100vh;
 display: flex;
-flex-direction: column;
 align-items: center;
 justify-content: center;
-gap: 20px;
+padding: 24px;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.error-page h1 {
-color: #d32f2f;
+.error-container {
+background: white;
+border-radius: 16px;
+padding: 48px;
+max-width: 600px;
+width: 100%;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+text-align: center;
 }
 
-.error-page a {
-padding: 10px 20px;
-background: #2196f3;
-color: white;
+.error-icon {
+font-size: 72px;
+margin-bottom: 24px;
+animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+0%, 100% {
+transform: scale(1);
+}
+50% {
+transform: scale(1.1);
+}
+}
+
+.error-container h1 {
+margin: 0 0 16px 0;
+font-size: 32px;
+color: #1a1a1a;
+}
+
+.error-message {
+font-size: 18px;
+color: #555;
+margin: 0 0 24px 0;
+line-height: 1.6;
+}
+
+.error-details {
+background: #fff3cd;
+border: 1px solid #ffc107;
+border-radius: 8px;
+padding: 16px;
+margin: 24px 0;
+text-align: left;
+}
+
+.error-details strong {
+display: block;
+color: #856404;
+margin-bottom: 8px;
+}
+
+.error-details p {
+margin: 0;
+color: #856404;
+font-size: 14px;
+}
+
+.error-action {
+background: #e3f2fd;
+border-radius: 8px;
+padding: 16px;
+margin: 24px 0;
+}
+
+.error-action p {
+margin: 0;
+color: #1976d2;
+font-size: 15px;
+font-weight: 500;
+}
+
+.error-buttons {
+display: flex;
+gap: 12px;
+justify-content: center;
+margin: 32px 0 24px 0;
+}
+
+.btn-primary, .btn-secondary {
+padding: 12px 24px;
+border-radius: 8px;
 text-decoration: none;
-border-radius: 6px;
+font-weight: 600;
+font-size: 15px;
+transition: all 0.2s;
+display: inline-block;
+}
+
+.btn-primary {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+}
+
+.btn-primary:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+background: white;
+color: #667eea;
+border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+background: #f5f5f5;
+}
+
+.error-info {
+margin-top: 32px;
+padding-top: 24px;
+border-top: 1px solid #e0e0e0;
+text-align: left;
+}
+
+.error-info p {
+margin: 8px 0;
+font-size: 13px;
+color: #666;
+}
+
+.error-info strong {
+color: #333;
+}
+
+.error-info code {
+background: #f5f5f5;
+padding: 2px 6px;
+border-radius: 3px;
+font-family: monospace;
+font-size: 12px;
+color: #d32f2f;
 }
 
 .app {
